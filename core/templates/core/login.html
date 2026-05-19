@@ -1,0 +1,60 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Acesso restrito — FSR</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{% static 'core/css/colors_and_type.css' %}" />
+  <link rel="stylesheet" href="{% static 'core/css/admin.css' %}" />
+</head>
+<body class="login-body">
+
+  <div class="login-wrap">
+    <div class="login-card">
+
+      <div class="login-brand">
+        <div class="login-brand-mark">FSR</div>
+        <div class="login-brand-name">Fronteira Sul em Resenha</div>
+        <div class="login-brand-sub">Área administrativa · acesso restrito</div>
+      </div>
+
+      {% if bloqueado %}
+        <div class="login-alert">
+          Acesso bloqueado por {{ minutos }} minuto{{ minutos|pluralize }}.
+          Aguarde antes de tentar novamente.
+        </div>
+      {% else %}
+        {% if messages %}
+          {% for msg in messages %}
+            <div class="login-alert">{{ msg }}</div>
+          {% endfor %}
+        {% endif %}
+
+        <form method="post" class="login-form" autocomplete="on">
+          {% csrf_token %}
+          <div class="login-field">
+            <label for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
+            {{ form.username }}
+          </div>
+          <div class="login-field">
+            <label for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
+            {{ form.password }}
+          </div>
+          {% if form.non_field_errors %}
+            <div class="login-alert">{{ form.non_field_errors.0 }}</div>
+          {% endif %}
+          <button type="submit" class="login-btn">Entrar</button>
+        </form>
+      {% endif %}
+
+      <div class="login-back">
+        <a href="{% url 'index' %}">← Voltar ao portal público</a>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,246 @@
+{% extends 'core/base_admin.html' %}
+{% block title %}{{ titulo }}{% endblock %}
+{% block nav_locais %}adm-nav-on{% endblock %}
+
+{% block extra_head %}
+<style>
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; }
+  @media (max-width: 900px) { .form-grid { grid-template-columns: 1fr; } }
+  .map-picker-box { position: sticky; top: 1.5rem; }
+  .map-picker-map { height: 440px; border-radius: 8px; overflow: hidden; border: 1.5px solid var(--border-1, #d0d7e2); }
+  .map-outside-msg { display: none; background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; border-radius: 6px; padding: .5rem .75rem; font-size: 13px; margin-top: .5rem; }
+  .map-outside-msg.visible { display: block; }
+  .map-coords-display { font-size: 12px; color: #64748b; margin-top: .4rem; font-variant-numeric: tabular-nums; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="adm-page">
+
+  <div class="adm-page-header">
+    <div>
+      <h1>{{ titulo }}</h1>
+      <p class="adm-page-sub">Campos marcados com * são obrigatórios</p>
+    </div>
+    <a href="{% url 'admin_dashboard' %}" class="adm-btn">← Voltar</a>
+  </div>
+
+  {% if form.non_field_errors %}
+    <div class="adm-msg adm-msg-error" style="margin-bottom:1rem">
+      {{ form.non_field_errors.0 }}
+    </div>
+  {% endif %}
+
+  <form method="post" id="local-form">
+    {% csrf_token %}
+    <div class="form-grid">
+
+      <!-- ── Campos do formulário ── -->
+      <div class="form-fields">
+
+        <div class="form-row">
+          <label for="{{ form.nome.id_for_label }}">Nome *</label>
+          {{ form.nome }}
+          {% if form.nome.errors %}<div class="form-err">{{ form.nome.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="form-row">
+          <label for="{{ form.categoria.id_for_label }}">Categoria *</label>
+          {{ form.categoria }}
+          {% if form.categoria.errors %}<div class="form-err">{{ form.categoria.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-row">
+            <label for="{{ form.cidade.id_for_label }}">Cidade *</label>
+            {{ form.cidade }}
+          </div>
+          <div class="form-row">
+            <label for="{{ form.uf.id_for_label }}">UF *</label>
+            {{ form.uf }}
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label for="{{ form.endereco.id_for_label }}">Endereço *</label>
+          {{ form.endereco }}
+        </div>
+
+        <div class="form-row">
+          <label for="{{ form.periodo.id_for_label }}">Período histórico *</label>
+          {{ form.periodo }}
+        </div>
+
+        <div class="form-row">
+          <label for="{{ form.resumo.id_for_label }}">
+            Resumo * <span class="form-hint">(aparece na lista lateral)</span>
+          </label>
+          {{ form.resumo }}
+          {% if form.resumo.errors %}<div class="form-err">{{ form.resumo.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="form-row">
+          <label for="{{ form.descricao.id_for_label }}">Descrição completa *</label>
+          {{ form.descricao }}
+          {% if form.descricao.errors %}<div class="form-err">{{ form.descricao.errors.0 }}</div>{% endif %}
+        </div>
+
+        <!-- Coordenadas (preenchidas pelo mapa) -->
+        <div class="form-row-2">
+          <div class="form-row">
+            <label for="{{ form.lat.id_for_label }}">Latitude</label>
+            {{ form.lat }}
+            {% if form.lat.errors %}<div class="form-err">{{ form.lat.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="form-row">
+            <label for="{{ form.lng.id_for_label }}">Longitude</label>
+            {{ form.lng }}
+            {% if form.lng.errors %}<div class="form-err">{{ form.lng.errors.0 }}</div>{% endif %}
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label class="form-check-label">
+            {{ form.ativo }}
+            <span>Ativo <span class="form-hint">(visível no mapa público)</span></span>
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="adm-btn adm-btn-primary">Salvar local</button>
+          <a href="{% url 'admin_dashboard' %}" class="adm-btn">Cancelar</a>
+        </div>
+
+      </div>
+
+      <!-- ── Mapa seletor ── -->
+      <div class="map-picker-box">
+        <div class="form-row">
+          <label>Localização no mapa *</label>
+          <p class="adm-page-sub" style="margin-bottom:.6rem">
+            Clique dentro da área da Fronteira Sul para definir a posição.
+            Pontos fora da região delimitada não são aceitos.
+          </p>
+          <div id="admin-map" class="map-picker-map"></div>
+          <div id="map-outside-msg" class="map-outside-msg">
+            ⚠ Ponto fora da Fronteira Sul. Clique dentro da área tracejada.
+          </div>
+          <div id="map-coords-display" class="map-coords-display">
+            {% if form.instance.pk %}
+              Posição atual: {{ form.instance.lat|floatformat:6 }}, {{ form.instance.lng|floatformat:6 }}
+            {% else %}
+              Nenhuma posição selecionada.
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </form>
+</div>
+
+<script>
+  var POLIGONO_FRONTEIRA = {{ poligono_json|safe }};
+  {% if form.instance.pk %}
+  var LAT_INICIAL = {{ form.instance.lat }};
+  var LNG_INICIAL = {{ form.instance.lng }};
+  {% else %}
+  var LAT_INICIAL = null;
+  var LNG_INICIAL = null;
+  {% endif %}
+  var GOOGLE_MAPS_API_KEY = "{{ google_maps_api_key }}";
+
+  function pontoNaFronteira(lat, lng) {
+    var n = POLIGONO_FRONTEIRA.length, inside = false, j = n - 1;
+    for (var i = 0; i < n; i++) {
+      var xi = POLIGONO_FRONTEIRA[i].lat, yi = POLIGONO_FRONTEIRA[i].lng;
+      var xj = POLIGONO_FRONTEIRA[j].lat, yj = POLIGONO_FRONTEIRA[j].lng;
+      if (((yi > lng) !== (yj > lng)) && (lat < (xj - xi) * (lng - yi) / (yj - yi) + xi))
+        inside = !inside;
+      j = i;
+    }
+    return inside;
+  }
+
+  function initAdminMap() {
+    var map = new google.maps.Map(document.getElementById('admin-map'), {
+      center: { lat: -27.0, lng: -52.5 },
+      zoom: 7,
+      minZoom: 6,
+      restriction: { latLngBounds: { north: -22.5, south: -33.8, west: -57.7, east: -48.0 }, strictBounds: false },
+      mapTypeId: 'roadmap',
+      disableDefaultUI: true,
+      zoomControl: true,
+      gestureHandling: 'greedy',
+      styles: [
+        { elementType: 'geometry', stylers: [{ color: '#eef2f7' }] },
+        { elementType: 'labels.text.fill', stylers: [{ color: '#6c7589' }] },
+        { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#cfd9e4' }] },
+        { featureType: 'road', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+        { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+        { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+      ],
+    });
+
+    // Polígono Fronteira Sul
+    new google.maps.Polygon({
+      paths: POLIGONO_FRONTEIRA, map: map,
+      strokeColor: '#0B2545', strokeOpacity: 0.5, strokeWeight: 2,
+      fillColor: '#0B2545', fillOpacity: 0.08, clickable: false,
+    });
+    new google.maps.Polyline({
+      path: POLIGONO_FRONTEIRA, map: map, strokeOpacity: 0,
+      icons: [{ icon: { path: 'M 0,-1 0,1', strokeOpacity: 0.65, strokeColor: '#0B2545', strokeWeight: 2.5, scale: 3 }, offset: '0', repeat: '16px' }],
+      clickable: false,
+    });
+
+    var marker = null;
+    var latInput = document.getElementById('id_lat');
+    var lngInput = document.getElementById('id_lng');
+    var msgDiv = document.getElementById('map-outside-msg');
+    var coordsDisplay = document.getElementById('map-coords-display');
+
+    function colocarMarcador(lat, lng) {
+      if (marker) marker.setMap(null);
+      marker = new google.maps.Marker({
+        position: { lat: lat, lng: lng },
+        map: map,
+        icon: {
+          url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="42" viewBox="0 0 32 42">' +
+            '<path d="M16 0C7.16 0 0 7.16 0 16c0 12 16 26 16 26s16-14 16-26C32 7.16 24.84 0 16 0z" fill="#0B2545"/>' +
+            '<circle cx="16" cy="14" r="8" fill="white"/></svg>'
+          ),
+          scaledSize: new google.maps.Size(32, 42),
+          anchor: new google.maps.Point(16, 42),
+        },
+      });
+      latInput.value = lat.toFixed(6);
+      lngInput.value = lng.toFixed(6);
+      coordsDisplay.textContent = 'Posição: ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
+    }
+
+    if (LAT_INICIAL !== null && LNG_INICIAL !== null) {
+      colocarMarcador(LAT_INICIAL, LNG_INICIAL);
+      map.panTo({ lat: LAT_INICIAL, lng: LNG_INICIAL });
+      map.setZoom(10);
+    }
+
+    map.addListener('click', function (e) {
+      var lat = e.latLng.lat(), lng = e.latLng.lng();
+      if (pontoNaFronteira(lat, lng)) {
+        msgDiv.classList.remove('visible');
+        colocarMarcador(lat, lng);
+      } else {
+        msgDiv.classList.add('visible');
+      }
+    });
+  }
+
+  window.__initAdminMap = initAdminMap;
+  var s = document.createElement('script');
+  s.src = 'https://maps.googleapis.com/maps/api/js?key=' + GOOGLE_MAPS_API_KEY + '&callback=__initAdminMap';
+  s.async = true; s.defer = true;
+  document.head.appendChild(s);
+</script>
+{% endblock %}

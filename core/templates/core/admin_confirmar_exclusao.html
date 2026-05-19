@@ -1,0 +1,22 @@
+{% extends 'core/base_admin.html' %}
+{% block title %}Excluir {{ local.nome }}{% endblock %}
+
+{% block content %}
+<div class="adm-page">
+  <div class="adm-card adm-card-danger">
+    <h2>Confirmar exclusão</h2>
+    <p>
+      Tem certeza que deseja excluir o local
+      <strong>{{ local.nome }}</strong> ({{ local.cidade }}/{{ local.uf }})?
+    </p>
+    <p class="adm-warn">Esta ação é irreversível.</p>
+    <div class="form-actions" style="margin-top:1.5rem">
+      <form method="post" style="display:inline">
+        {% csrf_token %}
+        <button type="submit" class="adm-btn adm-btn-danger">Excluir definitivamente</button>
+      </form>
+      <a href="{% url 'admin_dashboard' %}" class="adm-btn">Cancelar</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

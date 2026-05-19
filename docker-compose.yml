@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-mapa_fronteira_sul}
+      POSTGRES_USER: ${DB_USER:-mapa}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-mapa}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

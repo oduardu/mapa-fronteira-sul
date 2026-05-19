@@ -1,0 +1,1016 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Mapa de Locais — Fronteira Sul em Resenha</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap"
+            rel="stylesheet"
+        />
+        <link
+            rel="stylesheet"
+            href="{% static 'core/css/colors_and_type.css' %}"
+        />
+        <link rel="stylesheet" href="{% static 'core/css/styles.css' %}" />
+    </head>
+    <body>
+        <div id="root"></div>
+
+        <script>
+            var GOOGLE_MAPS_API_KEY = "{{ google_maps_api_key }}";
+        </script>
+        <script src="{% static 'core/js/data.js' %}"></script>
+        <script
+            src="https://unpkg.com/react@18/umd/react.production.min.js"
+            crossorigin
+        ></script>
+        <script
+            src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
+            crossorigin
+        ></script>
+        <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+        {% verbatim %}
+        <script type="text/babel">
+            const { useState, useEffect, useRef, useCallback } = React;
+
+            /* ================================================================
+       GOOGLE MAPS COMPONENT
+       ================================================================ */
+            const Mapa = ({
+                locais,
+                config,
+                selectedId,
+                onSelect,
+                hoveredId,
+                setHoveredId,
+                filtroCategoria,
+                busca,
+            }) => {
+                const mapRef = useRef(null);
+                const googleMapRef = useRef(null);
+                const markersRef = useRef({});
+                const defaultViewRef = useRef({ lat: config.centro.lat, lng: config.centro.lng, zoom: config.zoom_inicial });
+                const [mapReady, setMapReady] = useState(false);
+
+                // Initialize Google Map
+                useEffect(() => {
+                    if (!mapRef.current || googleMapRef.current) return;
+
+                    const initMap = () => {
+                        const map = new google.maps.Map(mapRef.current, {
+                            center: { lat: config.centro.lat, lng: config.centro.lng },
+                            zoom: config.zoom_inicial,
+                            minZoom: config.zoom_minimo,
+                            maxZoom: 18,
+                            restriction: {
+                                latLngBounds: {
+                                    north: config.restricao.norte,
+                                    south: config.restricao.sul,
+                                    east:  config.restricao.leste,
+                                    west:  config.restricao.oeste,
+                                },
+                                strictBounds: false,
+                            },
+                            mapTypeId: "roadmap",
+                            styles: [
+                                {
+                                    elementType: "geometry",
+                                    stylers: [{ color: "#eef2f7" }],
+                                },
+                                {
+                                    elementType: "labels.text.stroke",
+                                    stylers: [{ color: "#ffffff" }],
+                                },
+                                {
+                                    elementType: "labels.text.fill",
+                                    stylers: [{ color: "#6c7589" }],
+                                },
+                                {
+                                    featureType: "administrative",
+                                    elementType: "geometry.stroke",
+                                    stylers: [{ color: "#b8c2d0" }],
+                                },
+                                {
+                                    featureType: "administrative.province",
+                                    elementType: "geometry.stroke",
+                                    stylers: [
+                                        { color: "#b8c2d0" },
+                                        { weight: 1.5 },
+                                    ],
+                                },
+                                {
+                                    featureType: "water",
+                                    elementType: "geometry",
+                                    stylers: [{ color: "#cfd9e4" }],
+                                },
+                                {
+                                    featureType: "water",
+                                    elementType: "labels.text.fill",
+                                    stylers: [{ color: "#9aa7b8" }],
+                                },
+                                {
+                                    featureType: "road",
+                                    stylers: [{ visibility: "simplified" }],
+                                },
+                                {
+                                    featureType: "road",
+                                    elementType: "geometry",
+                                    stylers: [{ color: "#e2e8ef" }],
+                                },
+                                {
+                                    featureType: "road",
+                                    elementType: "labels",
+                                    stylers: [{ visibility: "off" }],
+                                },
+                                {
+                                    featureType: "road.highway",
+                                    elementType: "geometry",
+                                    stylers: [{ color: "#cbd0db" }],
+                                },
+                                {
+                                    featureType: "poi",
+                                    stylers: [{ visibility: "off" }],
+                                },
+                                {
+                                    featureType: "transit",
+                                    stylers: [{ visibility: "off" }],
+                                },
+                                {
+                                    featureType: "landscape.natural",
+                                    elementType: "geometry",
+                                    stylers: [{ color: "#eef2f7" }],
+                                },
+                            ],
+                            disableDefaultUI: true,
+                            zoomControl: true,
+                            zoomControlOptions: {
+                                position:
+                                    google.maps.ControlPosition.RIGHT_BOTTOM,
+                            },
+                            gestureHandling: "greedy",
+                        });
+
+                        googleMapRef.current = map;
+
+                        // Create markers
+                        locais.forEach((local) => {
+                            const cor =
+                                CATEGORIA_COR[local.categoria] || "#0b2545";
+
+                            const markerSvg = `
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="42" viewBox="0 0 32 42">
+                <path d="M16 0C7.16 0 0 7.16 0 16c0 12 16 26 16 26s16-14 16-26C32 7.16 24.84 0 16 0z" fill="${cor}"/>
+                <circle cx="16" cy="14" r="8" fill="white"/>
+              </svg>`;
+
+                            const marker = new google.maps.Marker({
+                                position: { lat: local.lat, lng: local.lng },
+                                map: map,
+                                title: local.nome,
+                                icon: {
+                                    url:
+                                        "data:image/svg+xml;charset=UTF-8," +
+                                        encodeURIComponent(markerSvg),
+                                    scaledSize: new google.maps.Size(32, 42),
+                                    anchor: new google.maps.Point(16, 42),
+                                },
+                                optimized: false,
+                            });
+
+                            const selectedSvg = `
+              <svg xmlns="http://www.w3.org/2000/svg" width="44" height="56" viewBox="0 0 44 56">
+                <circle cx="22" cy="20" r="22" fill="${cor}" opacity="0.18"/>
+                <path d="M22 2C12.06 2 4 10.06 4 20c0 14 18 34 18 34s18-20 18-34C40 10.06 31.94 2 22 2z" fill="${cor}"/>
+                <circle cx="22" cy="18" r="10" fill="white"/>
+              </svg>`;
+
+                            marker._normalIcon = {
+                                url:
+                                    "data:image/svg+xml;charset=UTF-8," +
+                                    encodeURIComponent(markerSvg),
+                                scaledSize: new google.maps.Size(32, 42),
+                                anchor: new google.maps.Point(16, 42),
+                            };
+                            marker._selectedIcon = {
+                                url:
+                                    "data:image/svg+xml;charset=UTF-8," +
+                                    encodeURIComponent(selectedSvg),
+                                scaledSize: new google.maps.Size(44, 56),
+                                anchor: new google.maps.Point(22, 56),
+                            };
+                            marker._hoverIcon = {
+                                url:
+                                    "data:image/svg+xml;charset=UTF-8," +
+                                    encodeURIComponent(
+                                        markerSvg
+                                            .replace('width="32"', 'width="38"')
+                                            .replace(
+                                                'height="42"',
+                                                'height="50"',
+                                            )
+                                            .replace(
+                                                'viewBox="0 0 32 42"',
+                                                'viewBox="0 0 32 42"',
+                                            ),
+                                    ),
+                                scaledSize: new google.maps.Size(38, 50),
+                                anchor: new google.maps.Point(19, 50),
+                            };
+
+                            marker.addListener("click", () => {
+                                onSelect(local.id);
+                            });
+                            marker.addListener("mouseover", () => {
+                                setHoveredId(local.id);
+                            });
+                            marker.addListener("mouseout", () => {
+                                setHoveredId(null);
+                            });
+
+                            markersRef.current[local.id] = marker;
+                        });
+
+                        const fronteiraPath = config.poligono;
+
+                        new google.maps.Polygon({
+                            paths: fronteiraPath,
+                            map: map,
+                            strokeColor: "#0B2545",
+                            strokeOpacity: 0.45,
+                            strokeWeight: 2.5,
+                            fillColor: "#0B2545",
+                            fillOpacity: 0.06,
+                            clickable: false,
+                            geodesic: true,
+                        });
+
+                        // Linha tracejada por cima (Google Maps não suporta strokeDasharray nativo,
+                        // então usamos uma Polyline com ícones repetidos para simular o tracejado)
+                        const dashedLine = new google.maps.Polyline({
+                            path: fronteiraPath,
+                            map: map,
+                            strokeOpacity: 0,
+                            icons: [
+                                {
+                                    icon: {
+                                        path: "M 0,-1 0,1",
+                                        strokeOpacity: 0.5,
+                                        strokeColor: "#0B2545",
+                                        strokeWeight: 2.5,
+                                        scale: 3,
+                                    },
+                                    offset: "0",
+                                    repeat: "16px",
+                                },
+                            ],
+                            clickable: false,
+                        });
+
+                        setMapReady(true);
+                    };
+
+                    // Load Google Maps script if not loaded
+                    if (window.google && window.google.maps) {
+                        initMap();
+                    } else {
+                        window.__initGoogleMap = initMap;
+                        const script = document.createElement("script");
+                        script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&callback=__initGoogleMap`;
+                        script.async = true;
+                        script.defer = true;
+                        document.head.appendChild(script);
+                    }
+                }, []);
+
+                // Sync selectedId → map pan/zoom + marker icon
+                useEffect(() => {
+                    if (!mapReady) return;
+                    const map = googleMapRef.current;
+
+                    Object.entries(markersRef.current).forEach(
+                        ([id, marker]) => {
+                            const numId = Number(id);
+                            if (numId === selectedId) {
+                                marker.setIcon(marker._selectedIcon);
+                                marker.setZIndex(1000);
+                            } else {
+                                marker.setIcon(marker._normalIcon);
+                                marker.setZIndex(undefined);
+                            }
+                        },
+                    );
+
+                    if (selectedId) {
+                        const local = locais.find((l) => l.id === selectedId);
+                        if (local) {
+                            map.setOptions({
+                                center: { lat: local.lat, lng: local.lng },
+                                zoom: 12,
+                            });
+                        }
+                    } else {
+                        map.setOptions({
+                            center: { lat: defaultViewRef.current.lat, lng: defaultViewRef.current.lng },
+                            zoom: defaultViewRef.current.zoom,
+                        });
+                    }
+                }, [selectedId, mapReady]);
+
+                // Sync hoveredId → marker icon
+                useEffect(() => {
+                    if (!mapReady) return;
+                    Object.entries(markersRef.current).forEach(
+                        ([id, marker]) => {
+                            const numId = Number(id);
+                            if (numId === selectedId) return; // don't override selected
+                            if (numId === hoveredId) {
+                                marker.setIcon(marker._hoverIcon);
+                                marker.setZIndex(999);
+                            } else {
+                                marker.setIcon(marker._normalIcon);
+                                marker.setZIndex(undefined);
+                            }
+                        },
+                    );
+                }, [hoveredId, mapReady, selectedId]);
+
+                // Sync filtroCategoria + busca → marker visibility
+                useEffect(() => {
+                    if (!mapReady) return;
+                    const q = (busca || "").trim().toLowerCase();
+                    locais.forEach((local) => {
+                        const marker = markersRef.current[local.id];
+                        if (!marker) return;
+                        const matchCat =
+                            filtroCategoria === "todos" ||
+                            local.categoria === filtroCategoria;
+                        const matchBusca =
+                            !q ||
+                            local.nome.toLowerCase().includes(q) ||
+                            local.cidade.toLowerCase().includes(q) ||
+                            local.uf.toLowerCase().includes(q) ||
+                            local.resumo.toLowerCase().includes(q);
+                        marker.setVisible(matchCat && matchBusca);
+                    });
+                }, [filtroCategoria, busca, mapReady]);
+
+                return (
+                    <div
+                        ref={mapRef}
+                        style={{ width: "100%", height: "100%" }}
+                    />
+                );
+            };
+
+            /* ================================================================
+       GALERIA
+       ================================================================ */
+            const Galeria = ({ imagens, cor }) => {
+                const [i, setI] = useState(0);
+                const total = imagens.length;
+                const atual = imagens[i];
+                return (
+                    <div className="galeria">
+                        <div
+                            className="galeria-imagem"
+                            style={{
+                                background: `linear-gradient(135deg, ${atual[0]} 0%, ${atual[1]} 100%)`,
+                            }}
+                        >
+                            <div className="galeria-protect"></div>
+                            <svg
+                                className="galeria-svg"
+                                viewBox="0 0 400 240"
+                                preserveAspectRatio="xMidYMid slice"
+                            >
+                                <line
+                                    x1="0"
+                                    y1="180"
+                                    x2="400"
+                                    y2="180"
+                                    stroke="rgba(255,255,255,0.18)"
+                                    strokeWidth="1"
+                                />
+                                {i === 0 && (
+                                    <g fill="rgba(255,255,255,0.22)">
+                                        <rect
+                                            x="60"
+                                            y="120"
+                                            width="80"
+                                            height="60"
+                                        />
+                                        <polygon points="60,120 100,90 140,120" />
+                                        <rect
+                                            x="160"
+                                            y="100"
+                                            width="100"
+                                            height="80"
+                                        />
+                                        <polygon points="160,100 210,70 260,100" />
+                                        <rect
+                                            x="280"
+                                            y="135"
+                                            width="60"
+                                            height="45"
+                                        />
+                                    </g>
+                                )}
+                                {i === 1 && (
+                                    <g fill="rgba(255,255,255,0.22)">
+                                        <rect
+                                            x="50"
+                                            y="130"
+                                            width="40"
+                                            height="50"
+                                        />
+                                        <rect
+                                            x="100"
+                                            y="110"
+                                            width="50"
+                                            height="70"
+                                        />
+                                        <polygon points="100,110 125,85 150,110" />
+                                        <rect
+                                            x="170"
+                                            y="125"
+                                            width="30"
+                                            height="55"
+                                        />
+                                        <rect
+                                            x="220"
+                                            y="100"
+                                            width="60"
+                                            height="80"
+                                        />
+                                        <polygon points="220,100 250,75 280,100" />
+                                        <rect
+                                            x="300"
+                                            y="140"
+                                            width="50"
+                                            height="40"
+                                        />
+                                    </g>
+                                )}
+                                {i === 2 && (
+                                    <g fill="rgba(255,255,255,0.22)">
+                                        <path d="M40,180 Q100,90 160,180 Z" />
+                                        <path d="M150,180 Q210,80 270,180 Z" />
+                                        <path d="M260,180 Q310,110 360,180 Z" />
+                                    </g>
+                                )}
+                                <path
+                                    d="M0,180 L400,180 L400,240 L0,240 Z"
+                                    fill="rgba(0,0,0,0.25)"
+                                />
+                            </svg>
+                            <div
+                                className="galeria-badge"
+                                style={{ background: cor }}
+                            >
+                                {i + 1} / {total}
+                            </div>
+                            {total > 1 && (
+                                <>
+                                    <button
+                                        className="galeria-nav galeria-nav-prev"
+                                        onClick={() =>
+                                            setI((i - 1 + total) % total)
+                                        }
+                                        aria-label="Imagem anterior"
+                                    >
+                                        <svg
+                                            width="18"
+                                            height="18"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2.5"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        >
+                                            <path d="m15 18-6-6 6-6" />
+                                        </svg>
+                                    </button>
+                                    <button
+                                        className="galeria-nav galeria-nav-next"
+                                        onClick={() => setI((i + 1) % total)}
+                                        aria-label="Próxima imagem"
+                                    >
+                                        <svg
+                                            width="18"
+                                            height="18"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2.5"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        >
+                                            <path d="m9 18 6-6-6-6" />
+                                        </svg>
+                                    </button>
+                                </>
+                            )}
+                            <div className="galeria-dots">
+                                {imagens.map((_, idx) => (
+                                    <button
+                                        key={idx}
+                                        className={`galeria-dot ${idx === i ? "galeria-dot-on" : ""}`}
+                                        onClick={() => setI(idx)}
+                                        aria-label={`Imagem ${idx + 1}`}
+                                    />
+                                ))}
+                            </div>
+                            <div className="galeria-placeholder-tag">
+                                imagem ilustrativa · placeholder
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            /* ================================================================
+       ITEM DA LISTA
+       ================================================================ */
+            const ItemLista = ({
+                local,
+                indice,
+                expandido,
+                hovered,
+                onClick,
+                onMouseEnter,
+                onMouseLeave,
+                refCb,
+            }) => {
+                const cor = CATEGORIA_COR[local.categoria] || "#0b2545";
+                const cat = CATEGORIAS.find((c) => c.id === local.categoria);
+                return (
+                    <li
+                        ref={refCb}
+                        className={`item ${expandido ? "item-on" : ""} ${hovered ? "item-hov" : ""}`}
+                        onMouseEnter={onMouseEnter}
+                        onMouseLeave={onMouseLeave}
+                    >
+                        <button
+                            className="item-head"
+                            onClick={onClick}
+                            aria-expanded={expandido}
+                        >
+                            <span
+                                className="item-pin"
+                                style={{ background: cor }}
+                            >
+                                <svg
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="white"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                >
+                                    <path d="M12 21s7-7.5 7-12.5A7 7 0 105 8.5C5 13.5 12 21 12 21z" />
+                                    <circle cx="12" cy="8.5" r="2.5" />
+                                </svg>
+                            </span>
+                            <span className="item-body">
+                                <span className="item-title">{local.nome}</span>
+                                <span className="item-meta">
+                                    <span
+                                        className="item-cat"
+                                        style={{ color: cor }}
+                                    >
+                                        {cat?.label || local.categoria}
+                                    </span>
+                                    <span className="item-sep">·</span>
+                                    <span>
+                                        {local.cidade}/{local.uf}
+                                    </span>
+                                </span>
+                            </span>
+                            <span className="item-num tnum">
+                                {String(indice).padStart(2, "0")}
+                            </span>
+                            <svg
+                                className="item-chev"
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <path d="m6 9 6 6 6-6" />
+                            </svg>
+                        </button>
+                        <div className="item-detail" data-open={expandido}>
+                            <div className="item-detail-inner">
+                                <Galeria imagens={local.imagens} cor={cor} />
+                                <div className="item-tags">
+                                    <span
+                                        className="item-tag"
+                                        style={{
+                                            background: cor + "22",
+                                            color: cor,
+                                        }}
+                                    >
+                                        {cat?.label || local.categoria}
+                                    </span>
+                                    <span className="item-tag item-tag-neutral">
+                                        {local.periodo}
+                                    </span>
+                                </div>
+                                <p className="item-resumo">{local.resumo}</p>
+                                <p className="item-descricao">
+                                    {local.descricao}
+                                </p>
+                                <dl className="item-info">
+                                    <div>
+                                        <dt>Endereço</dt>
+                                        <dd>{local.endereco}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Cidade</dt>
+                                        <dd>
+                                            {local.cidade} — {local.uf}
+                                        </dd>
+                                    </div>
+                                </dl>
+                                <div className="item-actions">
+                                    <a
+                                        className="btn btn-primary"
+                                        href={`https://www.google.com/maps/dir/?api=1&destination=${local.lat},${local.lng}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{
+                                            background: "var(--brand-primary)",
+                                        }}
+                                    >
+                                        <svg
+                                            width="16"
+                                            height="16"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        >
+                                            <path d="M9 11l3 3L22 4" />
+                                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                                        </svg>
+                                        Como chegar
+                                    </a>
+                                    <button
+                                        className="btn btn-ghost"
+                                        onClick={() =>
+                                            navigator.clipboard?.writeText(
+                                                `${local.lat},${local.lng}`,
+                                            )
+                                        }
+                                    >
+                                        <svg
+                                            width="16"
+                                            height="16"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        >
+                                            <rect
+                                                x="9"
+                                                y="9"
+                                                width="13"
+                                                height="13"
+                                                rx="2"
+                                            />
+                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                        </svg>
+                                        Copiar coordenadas
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                );
+            };
+
+            /* ================================================================
+       LISTA
+       ================================================================ */
+            const Lista = ({
+                locais,
+                selectedId,
+                onSelect,
+                hoveredId,
+                setHoveredId,
+                busca,
+                setBusca,
+                filtroCategoria,
+                setFiltroCategoria,
+            }) => {
+                const itemRefs = useRef({});
+
+                useEffect(() => {
+                    if (!selectedId) return;
+                    const el = itemRefs.current[selectedId];
+                    if (!el) return;
+                    const container = el.closest(".lista-scroll");
+                    if (!container) return;
+                    // Aguarda o accordion expandir antes de calcular a posição
+                    setTimeout(() => {
+                        const elRect = el.getBoundingClientRect();
+                        const ctRect = container.getBoundingClientRect();
+                        const scrollTop = container.scrollTop + elRect.top - ctRect.top - 8;
+                        container.scrollTo({ top: scrollTop, behavior: "smooth" });
+                    }, 50);
+                }, [selectedId]);
+
+                const filtrados = locais.filter((l) => {
+                    const matchCat =
+                        filtroCategoria === "todos" ||
+                        l.categoria === filtroCategoria;
+                    const q = busca.trim().toLowerCase();
+                    const matchBusca =
+                        !q ||
+                        l.nome.toLowerCase().includes(q) ||
+                        l.cidade.toLowerCase().includes(q) ||
+                        l.uf.toLowerCase().includes(q) ||
+                        l.resumo.toLowerCase().includes(q);
+                    return matchCat && matchBusca;
+                });
+
+                return (
+                    <aside className="lista-root">
+                        <div className="lista-header">
+                            <div className="lista-search">
+                                <svg
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                >
+                                    <circle cx="11" cy="11" r="7" />
+                                    <path d="m20 20-3.5-3.5" />
+                                </svg>
+                                <input
+                                    type="text"
+                                    placeholder="Buscar por nome, cidade ou descrição"
+                                    value={busca}
+                                    onChange={(e) => setBusca(e.target.value)}
+                                />
+                                {busca && (
+                                    <button
+                                        className="lista-search-clear"
+                                        onClick={() => setBusca("")}
+                                        aria-label="Limpar busca"
+                                    >
+                                        <svg
+                                            width="14"
+                                            height="14"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2.5"
+                                            strokeLinecap="round"
+                                        >
+                                            <path d="M18 6 6 18M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                )}
+                            </div>
+                            <div className="lista-chips">
+                                {CATEGORIAS.map((cat) => {
+                                    const ativa = filtroCategoria === cat.id;
+                                    const cor =
+                                        cat.id === "todos"
+                                            ? "#0b2545"
+                                            : CATEGORIA_COR[cat.id] ||
+                                              "#0b2545";
+                                    return (
+                                        <button
+                                            key={cat.id}
+                                            className={`chip ${ativa ? "chip-on" : ""}`}
+                                            onClick={() =>
+                                                setFiltroCategoria(cat.id)
+                                            }
+                                            style={
+                                                ativa
+                                                    ? {
+                                                          background: cor,
+                                                          borderColor: cor,
+                                                          color: "#fff",
+                                                      }
+                                                    : {
+                                                          borderColor:
+                                                              "var(--border-1)",
+                                                      }
+                                            }
+                                        >
+                                            {cat.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            <div className="lista-meta">
+                                <span className="tnum">{filtrados.length}</span>{" "}
+                                {filtrados.length === 1 ? "local" : "locais"}
+                                {filtrados.length > 0 &&
+                                    (() => {
+                                        const cidades = new Set(
+                                            filtrados.map((l) => l.cidade),
+                                        ).size;
+                                        const ufs = new Set(
+                                            filtrados.map((l) => l.uf),
+                                        ).size;
+                                        return (
+                                            <span className="lista-meta-detail">
+                                                {" "}
+                                                ·{" "}
+                                                <span className="tnum">
+                                                    {cidades}
+                                                </span>{" "}
+                                                {cidades === 1
+                                                    ? "cidade"
+                                                    : "cidades"}{" "}
+                                                ·{" "}
+                                                <span className="tnum">
+                                                    {ufs}
+                                                </span>{" "}
+                                                {ufs === 1
+                                                    ? "estado"
+                                                    : "estados"}
+                                            </span>
+                                        );
+                                    })()}
+                            </div>
+                        </div>
+                        <div className="lista-scroll">
+                            <ul className="lista-ul">
+                                {filtrados.length === 0 && (
+                                    <li className="lista-empty">
+                                        <div className="lista-empty-titulo">
+                                            Nenhum local encontrado
+                                        </div>
+                                        <div className="lista-empty-sub">
+                                            Tente outro termo ou remover o
+                                            filtro de categoria.
+                                        </div>
+                                    </li>
+                                )}
+                                {filtrados.map((l, idx) => (
+                                    <ItemLista
+                                        key={l.id}
+                                        local={l}
+                                        indice={idx + 1}
+                                        expandido={l.id === selectedId}
+                                        hovered={l.id === hoveredId}
+                                        onClick={() =>
+                                            onSelect(
+                                                l.id === selectedId
+                                                    ? null
+                                                    : l.id,
+                                            )
+                                        }
+                                        onMouseEnter={() => setHoveredId(l.id)}
+                                        onMouseLeave={() => setHoveredId(null)}
+                                        refCb={(el) => {
+                                            if (el) itemRefs.current[l.id] = el;
+                                        }}
+                                    />
+                                ))}
+                            </ul>
+                        </div>
+                    </aside>
+                );
+            };
+
+            /* ================================================================
+       HEADER
+       ================================================================ */
+            const Header = () => (
+                <header className="ojs-header">
+                    <div className="ojs-brand-row">
+                        <div className="ojs-titles">
+                            <h1>Mapa de locais da Fronteira Sul</h1>
+                            <div className="ojs-sub">
+                                Pontos históricos referenciados nas resenhas e
+                                estudos publicados nesta edição. Selecione um
+                                local para conhecer sua história.
+                            </div>
+                        </div>
+                    </div>
+                </header>
+            );
+
+            /* ================================================================
+       FOOTER
+       ================================================================ */
+            const Footer = () => (
+                <footer className="ojs-footer">
+                    <div className="ojs-footer-inner">
+                        <div>
+                            FSR — Fronteira Sul em Resenha · Universidade
+                            Federal da Fronteira Sul (UFFS)
+                        </div>
+                    </div>
+                </footer>
+            );
+
+            /* ================================================================
+       APP
+       ================================================================ */
+            const App = () => {
+                const [locais, setLocais] = useState([]);
+                const [configMapa, setConfigMapa] = useState(null);
+                const [carregando, setCarregando] = useState(true);
+                const [selectedId, setSelectedId] = useState(null);
+                const [hoveredId, setHoveredId] = useState(null);
+                const [busca, setBusca] = useState("");
+                const [filtroCategoria, setFiltroCategoria] = useState("todos");
+
+                useEffect(() => {
+                    Promise.all([
+                        fetch("/api/locais/").then((r) => r.json()),
+                        fetch("/api/config-mapa/").then((r) => r.json()),
+                    ])
+                        .then(([locaisData, configData]) => {
+                            setLocais(locaisData);
+                            setConfigMapa(configData);
+                            setCarregando(false);
+                        })
+                        .catch(() => setCarregando(false));
+                }, []);
+
+                return (
+                    <div>
+                        <Header />
+                        <main className="main-shell">
+                            <div className="main-grid">
+                                <div className="mapa-wrap">
+                                    {!carregando && configMapa && (
+                                        <Mapa
+                                            locais={locais}
+                                            config={configMapa}
+                                            selectedId={selectedId}
+                                            onSelect={setSelectedId}
+                                            hoveredId={hoveredId}
+                                            setHoveredId={setHoveredId}
+                                            filtroCategoria={filtroCategoria}
+                                            busca={busca}
+                                        />
+                                    )}
+                                    {carregando && (
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                height: "100%",
+                                                color: "#64748b",
+                                                fontSize: "14px",
+                                            }}
+                                        >
+                                            Carregando mapa…
+                                        </div>
+                                    )}
+                                </div>
+                                <Lista
+                                    locais={locais}
+                                    selectedId={selectedId}
+                                    onSelect={setSelectedId}
+                                    hoveredId={hoveredId}
+                                    setHoveredId={setHoveredId}
+                                    busca={busca}
+                                    setBusca={setBusca}
+                                    filtroCategoria={filtroCategoria}
+                                    setFiltroCategoria={setFiltroCategoria}
+                                />
+                            </div>
+                        </main>
+                        <Footer />
+                    </div>
+                );
+            };
+
+            ReactDOM.createRoot(document.getElementById("root")).render(
+                <App />,
+            );
+        </script>
+        {% endverbatim %}
+    </body>
+</html>

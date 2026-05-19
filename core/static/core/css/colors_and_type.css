@@ -1,0 +1,130 @@
+/* ============================================================
+   Minha Uno Design System — Colors + Type
+   ============================================================ */
+
+@font-face {
+  font-family: 'SF Pro Text';
+  src: local('SF Pro Text'), local('-apple-system');
+  font-display: swap;
+}
+
+:root {
+  /* ========== COLOR — BRAND (institutional deep blue) ========== */
+  --brand-50:  #EAF1FB;
+  --brand-100: #CEDDF2;
+  --brand-200: #A7BEE5;
+  --brand-300: #7B9CD4;
+  --brand-400: #4F7BC2;
+  --brand-500: #2E5FAB;
+  --brand-600: #1F4A8F;
+  --brand-700: #143872;
+  --brand-800: #0C2C5C;
+  --brand-900: #0B2545;
+  --brand-950: #061631;
+
+  /* ========== COLOR — ACCENT (academic amber) ========== */
+  --accent-50:  #FFF7E6;
+  --accent-100: #FFE9B8;
+  --accent-300: #F6CE7A;
+  --accent-500: #F4B740;
+  --accent-700: #C7911F;
+
+  /* ========== COLOR — NEUTRALS (warm slate) ========== */
+  --neutral-0:   #FFFFFF;
+  --neutral-50:  #F7F8FA;
+  --neutral-100: #EFF1F5;
+  --neutral-200: #E2E5EC;
+  --neutral-300: #CBD0DB;
+  --neutral-400: #9AA2B4;
+  --neutral-500: #6C7589;
+  --neutral-600: #4D5668;
+  --neutral-700: #353C4C;
+  --neutral-800: #212735;
+  --neutral-900: #141824;
+  --neutral-950: #0A0D15;
+
+  /* ========== COLOR — SEMANTIC ========== */
+  --success-50:  #E8F6EE;
+  --success-500: #1F9D55;
+  --success-700: #15753F;
+
+  --warning-50:  #FFF4DB;
+  --warning-500: #E79A1A;
+  --warning-700: #A66A08;
+
+  --danger-50:   #FDECEC;
+  --danger-500:  #D8443C;
+  --danger-700:  #9E2A24;
+
+  --info-50:     #E3F0FB;
+  --info-500:    #2D81D1;
+  --info-700:    #1F5F9B;
+
+  /* ========== SURFACE TOKENS — LIGHT (default) ========== */
+  --bg-app:             var(--neutral-50);
+  --bg-grouped:         var(--neutral-100);
+  --surface:            var(--neutral-0);
+  --surface-container:  var(--neutral-50);
+  --surface-container-high: var(--neutral-100);
+  --surface-elevated:   var(--neutral-0);
+
+  --fg-1:   var(--neutral-900);
+  --fg-2:   var(--neutral-600);
+  --fg-3:   var(--neutral-500);
+  --fg-4:   var(--neutral-400);
+  --fg-on-brand: var(--neutral-0);
+  --fg-on-accent: var(--neutral-900);
+
+  --border-1: var(--neutral-200);
+  --border-2: var(--neutral-300);
+
+  --brand-primary: var(--brand-900);
+  --brand-on:      var(--neutral-0);
+  --brand-tint:    var(--brand-50);
+
+  /* ========== ELEVATION / SHADOWS ========== */
+  --shadow-ios-card: 0 1px 2px rgba(10, 30, 60, 0.06);
+  --shadow-ios-sheet: 0 -2px 20px rgba(10, 30, 60, 0.10);
+
+  --elevation-0: none;
+  --elevation-1: 0 1px 2px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04);
+  --elevation-2: 0 1px 2px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.10);
+  --elevation-3: 0 2px 6px rgba(0,0,0,0.10), 0 4px 12px rgba(0,0,0,0.10);
+
+  /* ========== RADII ========== */
+  --r-xs:  4px;
+  --r-sm:  8px;
+  --r-md:  12px;
+  --r-lg:  16px;
+  --r-xl:  24px;
+  --r-2xl: 28px;
+  --r-full: 999px;
+
+  /* ========== SPACING ========== */
+  --sp-0:  0;
+  --sp-1:  4px;
+  --sp-2:  8px;
+  --sp-3:  12px;
+  --sp-4:  16px;
+  --sp-5:  20px;
+  --sp-6:  24px;
+  --sp-8:  32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+
+  /* ========== TYPOGRAPHY — families ========== */
+  --font-ios:     -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', sans-serif;
+  --font-android: 'Roboto', 'Roboto Flex', system-ui, sans-serif;
+  --font-mono:    ui-monospace, 'SF Mono', 'Roboto Mono', Menlo, monospace;
+  --font-brand:   'Inter', system-ui, sans-serif;
+
+  /* ========== MOTION ========== */
+  --ease-ios-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-m3-standard: cubic-bezier(0.2, 0, 0, 1);
+  --dur-fast: 150ms;
+  --dur-base: 250ms;
+  --dur-slow: 400ms;
+}
+
+.tnum { font-variant-numeric: tabular-nums; }

@@ -1,0 +1,305 @@
+{% extends 'core/base_admin.html' %}
+{% block title %}Configurar mapa{% endblock %}
+{% block nav_config %}adm-nav-on{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* ── Layout ── */
+  .cfg-wrap { margin: 1.5rem -1.5rem 0; height: calc(100vh - 175px); display: flex; flex-direction: column; }
+  .cfg-layout { display: grid; grid-template-columns: 300px 1fr; gap: 0; flex: 1; min-height: 0; }
+  .cfg-sidebar { background: #fff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; overflow-y: auto; }
+  .cfg-sidebar-head { padding: 1.25rem 1.25rem .75rem; border-bottom: 1px solid #e2e8f0; flex-shrink: 0; }
+  .cfg-sidebar-head h1 { font-size: 16px; font-weight: 600; color: #0f172a; margin-bottom: 2px; }
+  .cfg-sidebar-head p { font-size: 12px; color: #64748b; }
+  .cfg-section { padding: 1rem 1.25rem; border-bottom: 1px solid #f1f5f9; }
+  .cfg-section-title { font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: .5px; margin-bottom: .75rem; }
+  .cfg-row { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin-bottom: .5rem; }
+  .cfg-field { display: flex; flex-direction: column; gap: 3px; }
+  .cfg-field label { font-size: 11px; color: #64748b; }
+  .cfg-field input { border: 1.5px solid #e2e8f0; border-radius: 6px; padding: .4rem .6rem; font-size: 13px; font-variant-numeric: tabular-nums; outline: none; width: 100%; box-sizing: border-box; }
+  .cfg-field input:focus { border-color: #0b2545; }
+  .cfg-field input[readonly] { background: #f8fafc; color: #64748b; }
+  .cfg-hint { font-size: 11px; color: #94a3b8; margin-top: .25rem; line-height: 1.4; }
+  .cfg-actions { padding: 1rem 1.25rem; margin-top: auto; border-top: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: .5rem; flex-shrink: 0; }
+  .cfg-polygon-count { font-size: 12px; color: #64748b; padding: .25rem 0; }
+
+  /* ── Mapa ── */
+  .cfg-map { position: relative; }
+  .cfg-map-instructions { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 10; background: rgba(11,37,69,.88); color: #fff; font-size: 12px; padding: .45rem .9rem; border-radius: 20px; pointer-events: none; white-space: nowrap; }
+  #config-map { width: 100%; height: 100%; }
+  .cfg-legend { position: absolute; bottom: 40px; left: 12px; z-index: 10; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: .6rem .9rem; font-size: 12px; color: #374151; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+  .cfg-legend-item { display: flex; align-items: center; gap: .5rem; margin-bottom: .3rem; }
+  .cfg-legend-item:last-child { margin-bottom: 0; }
+  .cfg-legend-dot { width: 14px; height: 3px; }
+  .cfg-legend-dash { width: 14px; border-top: 2px dashed #0b2545; }
+
+  /* ── Mobile (≤ 700px) ── */
+  @media (max-width: 700px) {
+    .cfg-wrap { height: auto; min-height: 100vh; }
+    .cfg-layout { grid-template-columns: 1fr; grid-template-rows: auto 75vw; }
+    .cfg-sidebar { border-right: none; border-bottom: 1px solid #e2e8f0; overflow-y: visible; }
+    .cfg-actions { position: sticky; bottom: 0; background: #fff; z-index: 5; }
+    .cfg-map { min-height: 75vw; }
+    .cfg-map-instructions { font-size: 11px; padding: .35rem .7rem; max-width: 90vw; text-align: center; white-space: normal; }
+  }
+
+  /* ── Tablet (701px – 960px) ── */
+  @media (min-width: 701px) and (max-width: 960px) {
+    .cfg-layout { grid-template-columns: 240px 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cfg-wrap">
+<form method="post" id="config-form">
+{% csrf_token %}
+
+<!-- Inputs ocultos — preenchidos pelo mapa -->
+<input type="hidden" name="restricao_norte" id="f_norte" value="{{ config.restricao_norte }}">
+<input type="hidden" name="restricao_sul"   id="f_sul"   value="{{ config.restricao_sul }}">
+<input type="hidden" name="restricao_leste" id="f_leste" value="{{ config.restricao_leste }}">
+<input type="hidden" name="restricao_oeste" id="f_oeste" value="{{ config.restricao_oeste }}">
+<input type="hidden" name="centro_lat"   id="f_clat"  value="{{ config.centro_lat }}">
+<input type="hidden" name="centro_lng"   id="f_clng"  value="{{ config.centro_lng }}">
+<input type="hidden" name="zoom_inicial" id="f_zoom"  value="{{ config.zoom_inicial }}">
+<input type="hidden" name="zoom_minimo"  id="f_zmin"  value="{{ config.zoom_minimo }}">
+<input type="hidden" name="poligono"     id="f_pol"   value="{{ poligono_json }}">
+
+<div class="cfg-layout">
+
+  <!-- ── Sidebar ── -->
+  <div class="cfg-sidebar">
+    <div class="cfg-sidebar-head">
+      <h1>Configuração do mapa</h1>
+      <p>Arraste o retângulo e os vértices do polígono diretamente no mapa.</p>
+    </div>
+
+    <!-- Restrição de pan/zoom -->
+    <div class="cfg-section">
+      <div class="cfg-section-title">Área de navegação (retângulo azul)</div>
+      <p class="cfg-hint" style="margin-bottom:.75rem">Limita até onde o usuário pode arrastar e dar zoom no mapa público.</p>
+      <div class="cfg-row">
+        <div class="cfg-field"><label>Norte</label><input type="text" id="d_norte" readonly></div>
+        <div class="cfg-field"><label>Sul</label><input type="text" id="d_sul" readonly></div>
+      </div>
+      <div class="cfg-row">
+        <div class="cfg-field"><label>Leste</label><input type="text" id="d_leste" readonly></div>
+        <div class="cfg-field"><label>Oeste</label><input type="text" id="d_oeste" readonly></div>
+      </div>
+    </div>
+
+    <!-- Centro e zoom -->
+    <div class="cfg-section">
+      <div class="cfg-section-title">Visão inicial</div>
+      <div class="cfg-row">
+        <div class="cfg-field"><label>Centro Lat</label><input type="text" id="d_clat" readonly></div>
+        <div class="cfg-field"><label>Centro Lng</label><input type="text" id="d_clng" readonly></div>
+      </div>
+      <div class="cfg-row">
+        <div class="cfg-field">
+          <label>Zoom inicial</label>
+          <input type="number" id="d_zoom" min="1" max="18" value="{{ config.zoom_inicial }}"
+            oninput="document.getElementById('f_zoom').value=this.value">
+        </div>
+        <div class="cfg-field">
+          <label>Zoom mínimo</label>
+          <input type="number" id="d_zmin" min="1" max="14" value="{{ config.zoom_minimo }}"
+            oninput="document.getElementById('f_zmin').value=this.value">
+        </div>
+      </div>
+      <p class="cfg-hint">Clique no mapa para reposicionar o centro. O centro inicial é marcado com ⊕.</p>
+    </div>
+
+    <!-- Polígono -->
+    <div class="cfg-section">
+      <div class="cfg-section-title">Polígono da região (linha tracejada)</div>
+      <p class="cfg-hint">
+        Arraste os vértices para ajustar o contorno.<br>
+        Clique numa aresta para adicionar um vértice.<br>
+        Clique com botão direito em um vértice para removê-lo.<br>
+        Define também a área válida para novos pontos.
+      </p>
+      <div class="cfg-polygon-count" id="pol-count"></div>
+    </div>
+
+    <!-- Ações -->
+    <div class="cfg-actions">
+      <button type="submit" class="adm-btn adm-btn-primary">Salvar configuração</button>
+      <a href="{% url 'admin_dashboard' %}" class="adm-btn">Cancelar</a>
+    </div>
+  </div>
+
+  <!-- ── Mapa ── -->
+  <div class="cfg-map">
+    <div class="cfg-map-instructions">
+      Retângulo: arraste bordas/cantos &nbsp;·&nbsp; Polígono: arraste vértices &nbsp;·&nbsp; Mapa: clique para mover centro
+    </div>
+    <div id="config-map"></div>
+    <div class="cfg-legend">
+      <div class="cfg-legend-item"><div class="cfg-legend-dot" style="background:#2563eb;height:2px;border-top:2px dashed #2563eb"></div> Área de navegação</div>
+      <div class="cfg-legend-item"><div class="cfg-legend-dash"></div> Polígono da região</div>
+    </div>
+  </div>
+
+</div>
+</form>
+</div>
+
+<script>
+var CFG  = {{ config_json|safe }};
+var GKEY = "{{ google_maps_api_key }}";
+
+function fmt(v) { return parseFloat(v).toFixed(5); }
+
+function syncDisplay() {
+  document.getElementById('d_norte').value = fmt(document.getElementById('f_norte').value);
+  document.getElementById('d_sul').value   = fmt(document.getElementById('f_sul').value);
+  document.getElementById('d_leste').value = fmt(document.getElementById('f_leste').value);
+  document.getElementById('d_oeste').value = fmt(document.getElementById('f_oeste').value);
+  document.getElementById('d_clat').value  = fmt(document.getElementById('f_clat').value);
+  document.getElementById('d_clng').value  = fmt(document.getElementById('f_clng').value);
+}
+
+function updatePolCount(path) {
+  var n = path.getLength();
+  document.getElementById('pol-count').textContent = n + ' vértice' + (n === 1 ? '' : 's');
+}
+
+function serializePolygon(path) {
+  var pts = [];
+  for (var i = 0; i < path.getLength(); i++) {
+    var ll = path.getAt(i);
+    pts.push({ lat: ll.lat(), lng: ll.lng() });
+  }
+  document.getElementById('f_pol').value = JSON.stringify(pts);
+  updatePolCount(path);
+}
+
+function initConfigMap() {
+  var map = new google.maps.Map(document.getElementById('config-map'), {
+    center: { lat: CFG.centro.lat, lng: CFG.centro.lng },
+    zoom: CFG.zoom_inicial,
+    mapTypeId: 'roadmap',
+    disableDefaultUI: true,
+    zoomControl: true,
+    zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_BOTTOM },
+    gestureHandling: 'greedy',
+    styles: [
+      { elementType: 'geometry', stylers: [{ color: '#eef2f7' }] },
+      { elementType: 'labels.text.fill', stylers: [{ color: '#6c7589' }] },
+      { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#cfd9e4' }] },
+      { featureType: 'road', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+      { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+      { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+    ],
+  });
+
+  // ── Retângulo de restrição (editável) ────────────────────────────
+  var rect = new google.maps.Rectangle({
+    bounds: {
+      north: CFG.restricao.norte,
+      south: CFG.restricao.sul,
+      east:  CFG.restricao.leste,
+      west:  CFG.restricao.oeste,
+    },
+    map: map,
+    editable: true,
+    draggable: true,
+    strokeColor:  '#2563eb',
+    strokeOpacity: 0.8,
+    strokeWeight: 2,
+    fillColor:    '#2563eb',
+    fillOpacity:  0.06,
+  });
+
+  function updateBounds() {
+    var b = rect.getBounds();
+    document.getElementById('f_norte').value = b.getNorthEast().lat();
+    document.getElementById('f_sul').value   = b.getSouthWest().lat();
+    document.getElementById('f_leste').value = b.getNorthEast().lng();
+    document.getElementById('f_oeste').value = b.getSouthWest().lng();
+    syncDisplay();
+  }
+  rect.addListener('bounds_changed', updateBounds);
+
+  // ── Polígono da região (editável) ────────────────────────────────
+  var pol = new google.maps.Polygon({
+    paths: CFG.poligono,
+    map: map,
+    editable: true,
+    strokeColor:  '#0B2545',
+    strokeOpacity: 0,
+    strokeWeight: 0,
+    fillColor:    '#0B2545',
+    fillOpacity:  0.08,
+  });
+
+  // Linha tracejada por cima do polígono editável
+  var dashedLine = new google.maps.Polyline({
+    path: CFG.poligono,
+    map: map,
+    strokeOpacity: 0,
+    clickable: false,
+    icons: [{ icon: { path: 'M 0,-1 0,1', strokeOpacity: 0.6, strokeColor: '#0B2545', strokeWeight: 2.5, scale: 3 }, offset: '0', repeat: '16px' }],
+  });
+
+  function syncDashedLine() {
+    var pts = [];
+    var path = pol.getPath();
+    for (var i = 0; i < path.getLength(); i++) pts.push(path.getAt(i));
+    dashedLine.setPath(pts);
+    serializePolygon(path);
+  }
+
+  var path = pol.getPath();
+  path.addListener('set_at',    syncDashedLine);
+  path.addListener('insert_at', syncDashedLine);
+  path.addListener('remove_at', syncDashedLine);
+
+  // ── Marcador de centro (arrastável) ─────────────────────────────
+  var centerMarker = new google.maps.Marker({
+    position: { lat: CFG.centro.lat, lng: CFG.centro.lng },
+    map: map,
+    draggable: true,
+    title: 'Centro inicial do mapa',
+    icon: {
+      url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">' +
+        '<circle cx="14" cy="14" r="12" fill="white" stroke="#0b2545" stroke-width="2"/>' +
+        '<line x1="14" y1="4" x2="14" y2="24" stroke="#0b2545" stroke-width="1.5"/>' +
+        '<line x1="4" y1="14" x2="24" y2="14" stroke="#0b2545" stroke-width="1.5"/>' +
+        '<circle cx="14" cy="14" r="2.5" fill="#0b2545"/>' +
+        '</svg>'
+      ),
+      scaledSize: new google.maps.Size(28, 28),
+      anchor: new google.maps.Point(14, 14),
+    },
+  });
+
+  function updateCenter(pos) {
+    document.getElementById('f_clat').value = pos.lat();
+    document.getElementById('f_clng').value = pos.lng();
+    syncDisplay();
+  }
+  centerMarker.addListener('dragend', function(e) { updateCenter(e.latLng); });
+
+  // Clique no mapa reposiciona o centro
+  map.addListener('click', function(e) {
+    centerMarker.setPosition(e.latLng);
+    updateCenter(e.latLng);
+  });
+
+  // Estado inicial
+  syncDisplay();
+  updatePolCount(pol.getPath());
+}
+
+syncDisplay();
+window.__initConfigMap = initConfigMap;
+var s = document.createElement('script');
+s.src = 'https://maps.googleapis.com/maps/api/js?key=' + GKEY + '&callback=__initConfigMap';
+s.async = true; s.defer = true;
+document.head.appendChild(s);
+</script>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{% block title %}Admin{% endblock %} — FSR</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap"
+            rel="stylesheet"
+        />
+        <link
+            rel="stylesheet"
+            href="{% static 'core/css/colors_and_type.css' %}"
+        />
+        <link rel="stylesheet" href="{% static 'core/css/admin.css' %}" />
+        {% block extra_head %}{% endblock %}
+    </head>
+    <body class="admin-body">
+        <header class="adm-header">
+            <div class="adm-header-inner">
+                <a class="adm-brand" href="{% url 'admin_dashboard' %}">
+                    <span class="adm-brand-mark">FSR</span>
+                    <span class="adm-brand-text">
+                        Fronteira Sul em Resenha
+                        <span class="adm-badge">Área restrita</span>
+                    </span>
+                </a>
+                <nav class="adm-nav">
+                    <a href="{% url 'index' %}" rel="noopener">Ver portal</a>
+                    <a
+                        href="{% url 'admin_dashboard' %}"
+                        class="{% block nav_locais %}{% endblock %}"
+                        >Locais</a
+                    >
+                    <a
+                        href="{% url 'admin_config_mapa' %}"
+                        class="{% block nav_config %}{% endblock %}"
+                        >Configurar mapa</a
+                    >
+                    <form
+                        method="post"
+                        action="{% url 'admin_logout' %}"
+                        style="display: inline"
+                    >
+                        {% csrf_token %}
+                        <button type="submit" class="adm-logout-btn">
+                            Sair ({{ request.user.username }})
+                        </button>
+                    </form>
+                </nav>
+            </div>
+        </header>
+
+        <main class="adm-main">
+            {% if messages %}
+            <div class="adm-messages">
+                {% for msg in messages %}
+                <div class="adm-msg adm-msg-{{ msg.tags }}">{{ msg }}</div>
+                {% endfor %}
+            </div>
+            {% endif %} {% block content %}{% endblock %}
+        </main>
+    </body>
+</html>
