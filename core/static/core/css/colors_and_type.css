@@ -9,18 +9,18 @@
 }
 
 :root {
-  /* ========== COLOR — BRAND (institutional deep blue) ========== */
-  --brand-50:  #EAF1FB;
-  --brand-100: #CEDDF2;
-  --brand-200: #A7BEE5;
-  --brand-300: #7B9CD4;
-  --brand-400: #4F7BC2;
-  --brand-500: #2E5FAB;
-  --brand-600: #1F4A8F;
-  --brand-700: #143872;
-  --brand-800: #0C2C5C;
-  --brand-900: #0B2545;
-  --brand-950: #061631;
+  /* ========== COLOR — BRAND (primary red) ========== */
+  --brand-50:  #FFF0F0;
+  --brand-100: #FFD0D0;
+  --brand-200: #FFB0B0;
+  --brand-300: #FF7070;
+  --brand-400: #FF3838;
+  --brand-500: #FF0909;
+  --brand-600: #CC0000;
+  --brand-700: #990000;
+  --brand-800: #660000;
+  --brand-900: #440000;
+  --brand-950: #220000;
 
   /* ========== COLOR — ACCENT (academic amber) ========== */
   --accent-50:  #FFF7E6;
@@ -78,7 +78,7 @@
   --border-1: var(--neutral-200);
   --border-2: var(--neutral-300);
 
-  --brand-primary: var(--brand-900);
+  --brand-primary: var(--brand-500);
   --brand-on:      var(--neutral-0);
   --brand-tint:    var(--brand-50);
 

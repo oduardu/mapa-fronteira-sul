@@ -17,7 +17,7 @@
   .cfg-field { display: flex; flex-direction: column; gap: 3px; }
   .cfg-field label { font-size: 11px; color: #64748b; }
   .cfg-field input { border: 1.5px solid #e2e8f0; border-radius: 6px; padding: .4rem .6rem; font-size: 13px; font-variant-numeric: tabular-nums; outline: none; width: 100%; box-sizing: border-box; }
-  .cfg-field input:focus { border-color: #0b2545; }
+  .cfg-field input:focus { border-color: #ff0909; }
   .cfg-field input[readonly] { background: #f8fafc; color: #64748b; }
   .cfg-hint { font-size: 11px; color: #94a3b8; margin-top: .25rem; line-height: 1.4; }
   .cfg-actions { padding: 1rem 1.25rem; margin-top: auto; border-top: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: .5rem; flex-shrink: 0; }
@@ -31,7 +31,7 @@
   .cfg-legend-item { display: flex; align-items: center; gap: .5rem; margin-bottom: .3rem; }
   .cfg-legend-item:last-child { margin-bottom: 0; }
   .cfg-legend-dot { width: 14px; height: 3px; }
-  .cfg-legend-dash { width: 14px; border-top: 2px dashed #0b2545; }
+  .cfg-legend-dash { width: 14px; border-top: 2px dashed #ff0909; }
 
   /* ── Mobile (≤ 700px) ── */
   @media (max-width: 700px) {
@@ -266,10 +266,10 @@ function initConfigMap() {
     icon: {
       url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
         '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">' +
-        '<circle cx="14" cy="14" r="12" fill="white" stroke="#0b2545" stroke-width="2"/>' +
-        '<line x1="14" y1="4" x2="14" y2="24" stroke="#0b2545" stroke-width="1.5"/>' +
-        '<line x1="4" y1="14" x2="24" y2="14" stroke="#0b2545" stroke-width="1.5"/>' +
-        '<circle cx="14" cy="14" r="2.5" fill="#0b2545"/>' +
+        '<circle cx="14" cy="14" r="12" fill="white" stroke="#ff0909" stroke-width="2"/>' +
+        '<line x1="14" y1="4" x2="14" y2="24" stroke="#ff0909" stroke-width="1.5"/>' +
+        '<line x1="4" y1="14" x2="24" y2="14" stroke="#ff0909" stroke-width="1.5"/>' +
+        '<circle cx="14" cy="14" r="2.5" fill="#ff0909"/>' +
         '</svg>'
       ),
       scaledSize: new google.maps.Size(28, 28),

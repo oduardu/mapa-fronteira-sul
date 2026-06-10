@@ -7,11 +7,11 @@
 body { font-family: 'Roboto', system-ui, sans-serif; font-size: 14px; color: #1e293b; background: #f1f5f9; }
 
 /* ── Login ── */
-.login-body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #0b2545; }
+.login-body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #ff0909; }
 .login-wrap { width: 100%; max-width: 400px; padding: 1rem; }
 .login-card { background: #fff; border-radius: 12px; padding: 2.5rem 2rem; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
 .login-brand { text-align: center; margin-bottom: 2rem; }
-.login-brand-mark { width: 52px; height: 52px; background: #0b2545; color: #fff; border-radius: 10px; font-size: 18px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; letter-spacing: .5px; }
+.login-brand-mark { width: 52px; height: 52px; background: #ff0909; color: #fff; border-radius: 10px; font-size: 18px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; letter-spacing: .5px; }
 .login-brand-name { font-weight: 600; font-size: 15px; color: #1e293b; }
 .login-brand-sub { font-size: 12px; color: #64748b; margin-top: 2px; }
 .login-alert { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; border-radius: 6px; padding: .6rem .9rem; font-size: 13px; margin-bottom: 1rem; }
@@ -19,17 +19,17 @@ body { font-family: 'Roboto', system-ui, sans-serif; font-size: 14px; color: #1e
 .login-field { display: flex; flex-direction: column; gap: 5px; }
 .login-field label { font-size: 12px; font-weight: 500; color: #475569; text-transform: uppercase; letter-spacing: .5px; }
 .login-field input { border: 1.5px solid #e2e8f0; border-radius: 7px; padding: .6rem .85rem; font-size: 14px; outline: none; transition: border-color .15s; }
-.login-field input:focus { border-color: #0b2545; }
-.login-btn { margin-top: .5rem; background: #0b2545; color: #fff; border: none; border-radius: 7px; padding: .7rem 1.2rem; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .15s; }
-.login-btn:hover { background: #143872; }
+.login-field input:focus { border-color: #ff0909; }
+.login-btn { margin-top: .5rem; background: #ff0909; color: #fff; border: none; border-radius: 7px; padding: .7rem 1.2rem; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .15s; }
+.login-btn:hover { background: #cc0000; }
 .login-back { text-align: center; margin-top: 1.5rem; font-size: 12px; }
 .login-back a { color: #64748b; text-decoration: none; }
-.login-back a:hover { color: #0b2545; }
+.login-back a:hover { color: #ff0909; }
 
 /* ── Admin layout ── */
 .admin-body { min-height: 100vh; background: #f1f5f9; }
 
-.adm-header { background: #0b2545; color: #fff; height: 56px; }
+.adm-header { background: #ff0909; color: #fff; height: 56px; }
 .adm-header-inner { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; height: 100%; display: flex; align-items: center; justify-content: space-between; }
 .adm-brand { display: flex; align-items: center; gap: .75rem; text-decoration: none; color: inherit; }
 .adm-brand-mark { background: rgba(255,255,255,.15); border-radius: 6px; padding: .25rem .5rem; font-weight: 700; font-size: 13px; letter-spacing: .5px; }
@@ -57,8 +57,8 @@ body { font-family: 'Roboto', system-ui, sans-serif; font-size: 14px; color: #1e
 /* ── Buttons ── */
 .adm-btn { display: inline-flex; align-items: center; gap: .4rem; padding: .5rem 1rem; border-radius: 7px; font-size: 13px; font-weight: 500; text-decoration: none; cursor: pointer; border: 1.5px solid #e2e8f0; background: #fff; color: #374151; transition: all .15s; }
 .adm-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
-.adm-btn-primary { background: #0b2545; border-color: #0b2545; color: #fff; }
-.adm-btn-primary:hover { background: #143872; border-color: #143872; }
+.adm-btn-primary { background: #ff0909; border-color: #ff0909; color: #fff; }
+.adm-btn-primary:hover { background: #cc0000; border-color: #cc0000; }
 .adm-btn-danger { background: #dc2626; border-color: #dc2626; color: #fff; }
 .adm-btn-danger:hover { background: #b91c1c; border-color: #b91c1c; }
 
@@ -73,7 +73,7 @@ body { font-family: 'Roboto', system-ui, sans-serif; font-size: 14px; color: #1e
 .adm-row-off td { opacity: .5; }
 .adm-coords { font-size: 12px; font-variant-numeric: tabular-nums; color: #64748b; }
 .adm-empty { text-align: center; padding: 2.5rem !important; color: #94a3b8; }
-.adm-empty a { color: #0b2545; text-decoration: underline; }
+.adm-empty a { color: #ff0909; text-decoration: underline; }
 
 /* ── Status ── */
 .adm-status { display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; }
@@ -86,17 +86,17 @@ body { font-family: 'Roboto', system-ui, sans-serif; font-size: 14px; color: #1e
 .adm-cat-ruina   { background: #fef3e2; color: #7a5a2a; }
 .adm-cat-museu   { background: #e0eaff; color: #1f4a8f; }
 .adm-cat-igreja  { background: #ede9f6; color: #5a3a7a; }
-.adm-cat-marco   { background: #e0f0eb; color: #0b2545; }
+.adm-cat-marco   { background: #e0f0eb; color: #ff0909; }
 .adm-cat-casarao { background: #e8f5ee; color: #2d6a4f; }
 
 /* ── Actions ── */
 .adm-actions-cell { display: flex; gap: .5rem; align-items: center; }
-.adm-link { color: #0b2545; font-size: 13px; text-decoration: none; font-weight: 500; }
+.adm-link { color: #ff0909; font-size: 13px; text-decoration: none; font-weight: 500; }
 .adm-link:hover { text-decoration: underline; }
 .adm-link-danger { color: #dc2626; }
 .adm-action-btn { display: inline-flex; align-items: center; gap: .35rem; padding: .3rem .65rem; border-radius: 6px; font-size: 12px; font-weight: 500; text-decoration: none; border: 1.5px solid; transition: background .15s, color .15s, border-color .15s; cursor: pointer; white-space: nowrap; }
 .adm-action-edit { border-color: #e2e8f0; background: #f8fafc; color: #374151; }
-.adm-action-edit:hover { background: #0b2545; border-color: #0b2545; color: #fff; }
+.adm-action-edit:hover { background: #ff0909; border-color: #ff0909; color: #fff; }
 .adm-action-delete { border-color: #fecaca; background: #fef2f2; color: #dc2626; }
 .adm-action-delete:hover { background: #dc2626; border-color: #dc2626; color: #fff; }
 
@@ -120,7 +120,7 @@ input[type="text"], input[type="number"], input[type="email"], select, textarea 
   font-size: 13px; font-family: inherit; width: 100%; outline: none;
   background: #fff; color: #1e293b; transition: border-color .15s;
 }
-input:focus, select:focus, textarea:focus { border-color: #0b2545; }
+input:focus, select:focus, textarea:focus { border-color: #ff0909; }
 input[readonly] { background: #f8fafc; color: #64748b; cursor: default; }
 select { appearance: auto; }
 textarea { resize: vertical; line-height: 1.5; }

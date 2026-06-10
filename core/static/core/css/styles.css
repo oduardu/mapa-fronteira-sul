@@ -41,7 +41,7 @@ button {
 
 /* ===================== HEADER OJS ===================== */
 .ojs-header {
-    background: var(--brand-900);
+    background: var(--brand-primary);
     color: #fff;
 }
 
