@@ -74,13 +74,7 @@ python3 manage.py createsuperuser
 
 > O usuário precisa ter `is_staff = True` (o `createsuperuser` já define isso automaticamente).
 
-### 7. (Opcional) Importe os locais de exemplo
-
-```bash
-python3 manage.py importar_locais
-```
-
-### 8. Inicie o servidor
+### 7. Inicie o servidor
 
 ```bash
 python3 manage.py runserver
