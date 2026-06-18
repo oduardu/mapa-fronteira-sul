@@ -218,6 +218,15 @@ def admin_local_excluir(request, pk):
 
 
 # ────────────────────────────────────────────────────────────────
+# Páginas de erro
+# ────────────────────────────────────────────────────────────────
+
+def simular_erro_500(request):
+    """Renderiza a página de 500 diretamente para facilitar testes visuais."""
+    return render(request, '500.html', status=500)
+
+
+# ────────────────────────────────────────────────────────────────
 # Utilitário interno
 # ────────────────────────────────────────────────────────────────
 

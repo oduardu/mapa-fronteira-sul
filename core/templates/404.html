@@ -1,0 +1,121 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Página não encontrada — Fronteira Sul em Resenha</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{% static 'core/css/colors_and_type.css' %}" />
+    <link rel="stylesheet" href="{% static 'core/css/styles.css' %}" />
+    <style>
+        .erro-shell {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .erro-main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 24px;
+        }
+        .erro-card {
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+        }
+        .erro-codigo {
+            font-family: "Georgia", serif;
+            font-size: 96px;
+            font-weight: 700;
+            color: var(--brand-primary);
+            line-height: 1;
+            margin: 0 0 8px;
+            letter-spacing: -4px;
+            opacity: 0.15;
+        }
+        .erro-icone {
+            margin: -40px auto 24px;
+            width: 64px;
+            height: 64px;
+            background: var(--brand-50);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--brand-primary);
+        }
+        .erro-titulo {
+            font-family: "Georgia", serif;
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--fg-1);
+            margin: 0 0 12px;
+        }
+        .erro-desc {
+            font-size: 15px;
+            color: var(--fg-2);
+            line-height: 1.6;
+            margin: 0 0 32px;
+        }
+        .erro-acoes {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="erro-shell">
+        <header class="ojs-header">
+            <div class="ojs-brand-row">
+                <div class="ojs-titles">
+                    <h1>Fronteira Sul em Resenha</h1>
+                </div>
+            </div>
+        </header>
+
+        <main class="erro-main">
+            <div class="erro-card">
+                <div class="erro-codigo">404</div>
+                <div class="erro-icone">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="m21 21-4.35-4.35"/>
+                        <path d="M11 8v4M11 16h.01"/>
+                    </svg>
+                </div>
+                <h2 class="erro-titulo">Página não encontrada</h2>
+                <p class="erro-desc">
+                    O endereço que você acessou não existe ou foi movido.<br>
+                    Verifique o link ou volte ao mapa de locais históricos.
+                </p>
+                <div class="erro-acoes">
+                    <a href="/" class="btn btn-primary" style="background: var(--brand-primary);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                            <polyline points="9 22 9 12 15 12 15 22"/>
+                        </svg>
+                        Voltar ao mapa
+                    </a>
+                </div>
+            </div>
+        </main>
+
+        <footer class="ojs-footer">
+            <div class="ojs-footer-inner">
+                <div>FSR — Fronteira Sul em Resenha · Universidade Federal da Fronteira Sul (UFFS)</div>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
